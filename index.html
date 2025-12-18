@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ToDo-s - DayList</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: rgb(255, 254, 254);
+            --secondary: rgb(249, 198, 227);
+            --light: rgb(251, 250, 251);
+            --dark: #333344;
+            --gray: #8888AA;
+            --completed: #216936;
+            --shadow: rgb(249, 198, 227);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: url("wflow.jpg");
+            background-size: cover;
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            height: 85vh;
+            border-radius: 24px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 15px 40px var(--shadow);
+            position: relative;
+            opacity: 0.9;
+        }
+
+        /* Header */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 25px 20px 20px;
+            color: #216936;
+            position: relative;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .app-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .calendar-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            color: #216936;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .calendar-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .date-display {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        /* Progress */
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background:#216936;
+            width: 0%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        /* Calendar Modal */
+        .calendar-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            transform: translateY(-100%);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-radius: 24px;
+        }
+
+        .calendar-modal.show {
+            transform: translateY(0);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            color: white;
+        }
+
+        .calendar-title {
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .close-calendar {
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            color: hotpink;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .calendar-days {
+            flex: 1;
+            overflow-y: auto;
+            background: white;
+            border-radius: 16px;
+            padding: 15px;
+        }
+
+        .calendar-day {
+            background: rgb(246, 204, 228);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 15px;
+            color: rgb(8, 8, 8);
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .calendar-day:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-3px);
+        }
+
+        .calendar-date {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .day-count {
+            background: #216936;
+            color: white;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .calendar-tasks {
+            font-size: 14px;
+            opacity: 0.9;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .calendar-task {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .calendar-task i {
+            margin-right: 8px;
+            font-size: 10px;
+            color: #216936;
+        }
+
+        /* To-Do List */
+        .todo-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: var(--light);
+        }
+
+        .todo-list {
+            list-style: none;
+        }
+
+        .todo-item {
+            background: white;
+            padding: 18px;
+            margin-bottom: 15px;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px var(--shadow);
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+            animation: fadeIn 0.5s ease;
+            border-left: 5px solid #216936;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .todo-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px #c5eed1;
+        }
+
+        .todo-item.completed {
+            opacity: 0.7;
+            border-left-color: #216936;
+        }
+
+        .todo-checkbox {
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+            border: 2px solid #216936;;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+
+        .todo-checkbox.checked {
+            background: #216936;;
+            border-color: #216936;;
+        }
+
+        .todo-checkbox.checked i {
+            color: rgb(255, 253, 254);
+            font-size: 12px;
+        }
+
+        .todo-text {
+            flex: 1;
+            font-size: 16px;
+            line-height: 1.4;
+            color: #216936;
+        }
+
+        .todo-item.completed .todo-text {
+            text-decoration: line-through;
+            color: #216936;;
+        }
+
+        .todo-delete {
+            color:#216936;;
+            font-size: 18px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            padding: 5px;
+            margin-left: 10px;
+        }
+
+        .todo-delete:hover {
+            opacity: 1;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #216936;;
+        }
+
+        .empty-state i {
+            font-size: 60px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+        }
+
+        /* Add Todo Form */
+        .add-todo {
+            display: flex;
+            padding: 20px;
+            background:rgb(255, 253, 254);
+            border-top: 1px solid rgba(108, 99, 255, 0.1);
+        }
+
+        .add-todo input {
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid #216936;
+            border-radius: 12px 0 0 12px;
+            font-size: 16px;
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            outline: #216936;
+            transition: border 0.3s;
+        }
+
+        .add-todo input:focus {
+            border-color: #216936;;
+        }
+
+        .add-todo input::placeholder {
+            color: #216936;;
+        }
+
+        .add-todo button {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-color: #216936;
+            color: #216936;
+            padding: 0 25px;
+            border-radius: 0 12px 12px 0;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-todo button:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+
+        /* Footer */
+        .app-footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 12px;
+            color: #216936;;
+            background-color: rgb(251, 197, 226);
+            border-top: 1px solid #eee;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(108, 99, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--secondary);
+            border-radius: 10px;
+        }
+
+        /* Responsive */
+        @media (max-height: 700px) {
+            .app-container {
+                height: 90vh;
+            }
+            
+            .app-header {
+                padding: 20px 20px 15px;
+            }
+            
+            .todo-item {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="app-header">
+            <div class="header-top">
+                <h1 class="app-title"> ToDo-s</h1>
+                <button class="calendar-btn" id="calendarBtn">
+                    <i class="fas fa-calendar-alt"></i>
+                </button>
+            </div>
+            <div class="date-display" id="currentDate">Today, December 17</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <!-- Calendar Modal -->
+        <div class="calendar-modal" id="calendarModal">
+            <div class="calendar-header">
+                <h2 class="calendar-title">Previous Days</h2>
+                <button class="close-calendar" id="closeCalendar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="calendar-days" id="calendarDays">
+                <!-- Calendar days will be added here -->
+            </div>
+        </div>
+
+        <!-- To-Do List -->
+        <div class="todo-container">
+            <ul class="todo-list" id="todoList">
+                <!-- To-do items will be added here -->
+            </ul>
+            
+            <div class="empty-state" id="emptyState">
+                <i class="fas fa-check-circle"></i>
+                <p>heyy!!!!!!!! cheer up what's next🎃</p>
+                <p>U can do it🦾
+                    list here
+                </p>
+            </div>
+        </div>
+
+        <!-- Add Todo Form -->
+        <div class="add-todo">
+            <input type="text" id="newTodoInput" placeholder="Add a new task...">
+            <button id="addTodoBtn">
+                <i class="fas fa-plus"></i> Add
+            </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="app-footer">
+            Simple, clean, and effective. Start fresh each day.
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const todoList = document.getElementById('todoList');
+        const newTodoInput = document.getElementById('newTodoInput');
+        const addTodoBtn = document.getElementById('addTodoBtn');
+        const emptyState = document.getElementById('emptyState');
+        const calendarBtn = document.getElementById('calendarBtn');
+        const calendarModal = document.getElementById('calendarModal');
+        const closeCalendar = document.getElementById('closeCalendar');
+        const calendarDays = document.getElementById('calendarDays');
+        const currentDateElement = document.getElementById('currentDate');
+        const progressFill = document.getElementById('progressFill');
+
+        // Initialize data from localStorage
+        let todos = JSON.parse(localStorage.getItem('daylist_todos')) || [];
+        let history = JSON.parse(localStorage.getItem('daylist_history')) || [];
+
+        // Get today's date string
+        const today = new Date();
+        const todayStr = today.toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            month: 'long', 
+            day: 'numeric',
+            year: 'numeric'
+        });
+
+        // Current date display
+        currentDateElement.textContent = todayStr;
+
+        // Initialize the app
+        function initApp() {
+            // Check if we need to archive yesterday's todos
+            checkAndArchive();
+            
+            // Render today's todos
+            renderTodos();
+            
+            // Update progress
+            updateProgress();
+            
+            // Render calendar history
+            renderCalendar();
+        }
+
+        // Check and archive yesterday's todos
+        function checkAndArchive() {
+            const lastVisit = localStorage.getItem('daylist_lastVisit');
+            
+            // If it's a new day and we have todos from yesterday
+            if (lastVisit !== todayStr && todos.length > 0) {
+                // Get yesterday's date
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = yesterday.toLocaleDateString('en-US', { 
+                    month: 'long', 
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+                
+                // Archive yesterday's todos
+                history.unshift({
+                    date: yesterdayStr,
+                    todos: [...todos]
+                });
+                
+                // Keep only last 30 days
+                if (history.length > 30) {
+                    history = history.slice(0, 30);
+                }
+                
+                // Clear today's todos
+                todos = [];
+                
+                // Save changes
+                saveTodos();
+                saveHistory();
+            }
+            
+            // Update last visit date
+            localStorage.setItem('daylist_lastVisit', todayStr);
+        }
+
+        // Render todos
+        function renderTodos() {
+            todoList.innerHTML = '';
+            
+            if (todos.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            todos.forEach(todo => {
+                const todoItem = document.createElement('li');
+                todoItem.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+                todoItem.dataset.id = todo.id;
+                
+                todoItem.innerHTML = `
+                    <div class="todo-checkbox ${todo.completed ? 'checked' : ''}">
+                        ${todo.completed ? '<i class="fas fa-check"></i>' : ''}
+                    </div>
+                    <div class="todo-text">${todo.text}</div>
+                    <div class="todo-delete">
+                        <i class="fas fa-trash"></i>
+                    </div>
+                `;
+                
+                todoList.appendChild(todoItem);
+                
+                // Add event listeners
+                const checkbox = todoItem.querySelector('.todo-checkbox');
+                const deleteBtn = todoItem.querySelector('.todo-delete');
+                
+                checkbox.addEventListener('click', () => toggleTodoCompletion(todo.id));
+                deleteBtn.addEventListener('click', () => deleteTodo(todo.id));
+            });
+        }
+
+        // Add a new todo
+        function addTodo() {
+            const text = newTodoInput.value.trim();
+            
+            if (text === '') {
+                // Add shake animation
+                newTodoInput.style.transform = 'translateX(10px)';
+                setTimeout(() => {
+                    newTodoInput.style.transform = 'translateX(-10px)';
+                }, 50);
+                setTimeout(() => {
+                    newTodoInput.style.transform = 'translateX(0)';
+                }, 100);
+                return;
+            }
+            
+            // Create new todo
+            const newTodo = {
+                id: Date.now(),
+                text: text,
+                completed: false
+            };
+            
+            todos.push(newTodo);
+            saveTodos();
+            renderTodos();
+            updateProgress();
+            
+            // Clear input
+            newTodoInput.value = '';
+            newTodoInput.focus();
+        }
+
+        // Toggle todo completion
+        function toggleTodoCompletion(todoId) {
+            const todo = todos.find(t => t.id === todoId);
+            if (todo) {
+                todo.completed = !todo.completed;
+                saveTodos();
+                renderTodos();
+                updateProgress();
+            }
+        }
+
+        // Delete a todo
+        function deleteTodo(todoId) {
+            todos = todos.filter(t => t.id !== todoId);
+            saveTodos();
+            renderTodos();
+            updateProgress();
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            if (todos.length === 0) {
+                progressFill.style.width = '0%';
+                return;
+            }
+            
+            const completedCount = todos.filter(t => t.completed).length;
+            const percentage = Math.round((completedCount / todos.length) * 100);
+            progressFill.style.width = `${percentage}%`;
+        }
+
+        // Render calendar history
+        function renderCalendar() {
+            calendarDays.innerHTML = '';
+            
+            if (history.length === 0) {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.className = 'calendar-day';
+                emptyMsg.innerHTML = `
+                    <div class="calendar-date">No history yet</div>
+                    <div class="calendar-tasks">Complete tasks today to see them here tomorrow!</div>
+                `;
+                calendarDays.appendChild(emptyMsg);
+                return;
+            }
+            
+            // Show only last 7 days in calendar
+            const recentHistory = history.slice(0, 7);
+            
+            recentHistory.forEach(day => {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                
+                // Count completed todos
+                const completedCount = day.todos.filter(t => t.completed).length;
+                const totalCount = day.todos.length;
+                
+                // Get first 3 todos for preview
+                const previewTodos = day.todos.slice(0, 3);
+                
+                dayElement.innerHTML = `
+                    <div class="calendar-date">
+                        ${day.date}
+                        <span class="day-count">${completedCount}/${totalCount}</span>
+                    </div>
+                    <div class="calendar-tasks">
+                        ${previewTodos.map(todo => `
+                            <div class="calendar-task">
+                                <i class="fas ${todo.completed ? 'fa-check-circle' : 'fa-circle'}"></i>
+                                ${todo.text}
+                            </div>
+                        `).join('')}
+                        ${day.todos.length > 3 ? 
+                            `<div class="calendar-task">
+                                <i class="fas fa-ellipsis-h"></i>
+                                and ${day.todos.length - 3} more tasks
+                            </div>` 
+                            : ''
+                        }
+                    </div>
+                `;
+                
+                calendarDays.appendChild(dayElement);
+            });
+        }
+
+        // Save todos to localStorage
+        function saveTodos() {
+            localStorage.setItem('daylist_todos', JSON.stringify(todos));
+        }
+
+        // Save history to localStorage
+        function saveHistory() {
+            localStorage.setItem('daylist_history', JSON.stringify(history));
+        }
+
+        // Event Listeners
+        addTodoBtn.addEventListener('click', addTodo);
+        newTodoInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTodo();
+            }
+        });
+
+        // Calendar toggle
+        calendarBtn.addEventListener('click', () => {
+            calendarModal.classList.add('show');
+        });
+
+        closeCalendar.addEventListener('click', () => {
+            calendarModal.classList.remove('show');
+        });
+
+        // Close calendar when clicking outside
+        calendarModal.addEventListener('click', (e) => {
+            if (e.target === calendarModal) {
+                calendarModal.classList.remove('show');
+            }
+        });
+
+        // Initialize the app
+        initApp();
+    </script>
+</body>
+</html>
